@@ -1,0 +1,23 @@
+{
+  "propertyId": "17-ocean",
+  "status": "concept",
+  "mediaDirectory": "properties/17-ocean/media",
+  "allowedExtensions": [".jpg", ".jpeg", ".png", ".webp", ".avif"],
+  "requiredFrames": [
+    "01-arrival-coast",
+    "02-approach-exterior",
+    "03-threshold-door",
+    "04-living-hero",
+    "05-kitchen",
+    "06-primary-suite",
+    "07-bath-wellness",
+    "08-terrace",
+    "09-location",
+    "10-night-exterior"
+  ],
+  "requiredCrop": {
+    "basename": "hero-4x5",
+    "sourceMustBeOneOf": ["02-approach-exterior", "04-living-hero"]
+  },
+  "truthBoundary": "GENERATED_CONCEPT only. No address, brokerage, MLS, performance metric, testimonial, publication quote, commute time, price or property fact may be invented."
+}
