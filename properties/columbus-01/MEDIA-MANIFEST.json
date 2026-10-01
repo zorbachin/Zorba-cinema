@@ -1,0 +1,23 @@
+{
+  "propertyId": "columbus-01",
+  "status": "concept",
+  "mediaDirectory": "properties/columbus-01/media",
+  "allowedExtensions": [".jpg", ".jpeg", ".png", ".webp", ".avif"],
+  "requiredFrames": [
+    "01-exterior",
+    "02-entry",
+    "03-great-room",
+    "04-kitchen",
+    "05-primary-suite",
+    "06-primary-bath",
+    "07-backyard-patio",
+    "08-floorplan-placeholder",
+    "09-neighborhood",
+    "10-evening-exterior"
+  ],
+  "requiredCrop": {
+    "basename": "hero-4x5",
+    "sourceMustBeOneOf": ["01-exterior"]
+  },
+  "truthBoundary": "GENERATED_CONCEPT only. No address, brokerage, MLS, school district, commute time, price, square footage, testimonial, performance metric or neighborhood claim may be invented."
+}
