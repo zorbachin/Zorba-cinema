@@ -26,11 +26,26 @@
     history.replaceState(null, "", next);
   }
 
+  function pendingMedia() {
+    return '<div class="asset-pending" role="img" aria-label="Continuity media pack pending"><span>CONTINUITY MEDIA PACK<br>PENDING</span></div>';
+  }
+
   function sceneMedia(scene) {
     if (scene.image) {
-      return '<img class="scene-image" src="' + scene.image + '" alt="Concept reference image for this prototype scene" />';
+      return '<img class="scene-image" data-scene-image src="' + scene.image + '" alt="Concept property image for ' + scene.kicker + '" />';
     }
-    return '<div class="asset-pending" role="img" aria-label="Continuity media pack pending"><span>CONTINUITY MEDIA PACK<br>PENDING</span></div>';
+    return pendingMedia();
+  }
+
+  function installMediaFallback() {
+    const image = app.querySelector("[data-scene-image]");
+    if (!image) return;
+    image.addEventListener("error", () => {
+      const wrapper = image.parentElement;
+      if (!wrapper) return;
+      image.remove();
+      wrapper.insertAdjacentHTML("afterbegin", pendingMedia());
+    }, { once: true });
   }
 
   function render() {
@@ -66,6 +81,8 @@
       '</div>' +
       '<dialog id="explain"><div><p class="kicker">CONCEPT ONLY</p><h2>The property is the interface.</h2><p>Agents provide approved photography, verified property details and branding. A client version turns that material into a guided property microsite with one supplied enquiry or viewing path.</p><p class="dialog-note">No live contact action is wired in this review build.</p><button data-action="close">CLOSE</button></div></dialog>' +
     '</section>';
+
+    installMediaFallback();
 
     app.querySelectorAll("[data-property]").forEach((button) => button.addEventListener("click", () => {
       propertyId = button.dataset.property;
