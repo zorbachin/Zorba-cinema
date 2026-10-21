@@ -2,7 +2,7 @@ export const property = {
   id: "columbus-01",
   status: "concept",
   label: "COLUMBUS 01",
-  location: "Columbus, Ohio",
+  location: "Columbus, Ohio — Concept",
   disclosure: "Concept property created to demonstrate a cinematic listing experience.",
   treatment: "editorial",
   scenes: [
