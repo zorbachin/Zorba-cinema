@@ -38,11 +38,13 @@ for (const relManifest of manifestPaths) {
   const expected = [...manifest.requiredFrames, manifest.requiredCrop.basename];
   const missing = [];
   const ambiguous = [];
+  const zeroByte = [];
 
   for (const base of expected) {
     const matches = byBase.get(base) || [];
     if (matches.length === 0) missing.push(base);
     if (matches.length > 1) ambiguous.push({ base, matches });
+    if (matches.length === 1 && fs.statSync(path.join(mediaDir, matches[0])).size === 0) zeroByte.push(matches[0]);
   }
 
   const unexpected = [...byBase.entries()]
@@ -50,7 +52,7 @@ for (const relManifest of manifestPaths) {
     .flatMap(([, names]) => names)
     .sort();
 
-  const pass = missing.length === 0 && ambiguous.length === 0;
+  const pass = missing.length === 0 && ambiguous.length === 0 && zeroByte.length === 0;
   if (!pass) failures += 1;
 
   console.log("\n[" + manifest.propertyId + "] " + (pass ? "PASS" : "NOT READY"));
@@ -66,6 +68,11 @@ for (const relManifest of manifestPaths) {
     for (const item of ambiguous) {
       console.log("  - " + item.base + ": " + item.matches.join(", "));
     }
+  }
+
+  if (zeroByte.length) {
+    console.log("empty image files (must contain actual media):");
+    for (const name of zeroByte) console.log("  - " + name);
   }
 
   if (unexpected.length) {
