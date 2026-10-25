@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,18 @@ function filesByBasename(dir, extensions) {
   return map;
 }
 
+function verifyImageDecode(filename) {
+  // Decode the first frame, not merely the filename, signature or file size.
+  // Fail closed when FFmpeg is unavailable; final continuity requires visual review.
+  const result = spawnSync("ffmpeg", [
+    "-hide_banner", "-loglevel", "error", "-xerror", "-i", filename,
+    "-frames:v", "1", "-f", "null", "-"
+  ], { encoding: "utf8", timeout: 30000, maxBuffer: 1_000_000 });
+  if (result.error) return "decoder unavailable or failed: " + result.error.message;
+  if (result.status !== 0) return "cannot decode first image frame: " + (result.stderr || `exit ${result.status}`).trim().slice(0, 180);
+  return null;
+}
+
 for (const relManifest of manifestPaths) {
   const manifestFile = path.join(repoRoot, relManifest);
   const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
@@ -39,12 +52,20 @@ for (const relManifest of manifestPaths) {
   const missing = [];
   const ambiguous = [];
   const zeroByte = [];
+  const undecodable = [];
 
   for (const base of expected) {
     const matches = byBase.get(base) || [];
     if (matches.length === 0) missing.push(base);
     if (matches.length > 1) ambiguous.push({ base, matches });
-    if (matches.length === 1 && fs.statSync(path.join(mediaDir, matches[0])).size === 0) zeroByte.push(matches[0]);
+    if (matches.length === 1) {
+      const filename = path.join(mediaDir, matches[0]);
+      if (fs.statSync(filename).size === 0) zeroByte.push(matches[0]);
+      else {
+        const reason = verifyImageDecode(filename);
+        if (reason) undecodable.push({ name: matches[0], reason });
+      }
+    }
   }
 
   const unexpected = [...byBase.entries()]
@@ -52,7 +73,7 @@ for (const relManifest of manifestPaths) {
     .flatMap(([, names]) => names)
     .sort();
 
-  const pass = missing.length === 0 && ambiguous.length === 0 && zeroByte.length === 0;
+  const pass = missing.length === 0 && ambiguous.length === 0 && zeroByte.length === 0 && undecodable.length === 0;
   if (!pass) failures += 1;
 
   console.log("\n[" + manifest.propertyId + "] " + (pass ? "PASS" : "NOT READY"));
@@ -75,19 +96,24 @@ for (const relManifest of manifestPaths) {
     for (const name of zeroByte) console.log("  - " + name);
   }
 
+  if (undecodable.length) {
+    console.log("unreadable image files (first frame must decode with FFmpeg):");
+    for (const item of undecodable) console.log("  - " + item.name + ": " + item.reason);
+  }
+
   if (unexpected.length) {
     console.log("extra files (allowed, but not counted toward readiness):");
     for (const name of unexpected) console.log("  - " + name);
   }
 
   if (pass) {
-    console.log("all 10 required scene frames + hero-4x5 are present");
+    console.log("all 10 required scene frames + hero-4x5 decode (continuity and approvals still require visual QA)");
   }
 }
 
 if (failures) {
-  console.error("\nMEDIA GATE: FAIL — " + failures + " property pack(s) incomplete or ambiguous.");
+  console.error("\nMEDIA GATE: FAIL — " + failures + " property pack(s) incomplete, ambiguous or unreadable.");
   process.exitCode = 1;
 } else {
-  console.log("\nMEDIA GATE: PASS — both continuity packs have all required slots.");
+  console.log("\nMEDIA GATE: PASS — both required media packs decode; continuity approval is separate.");
 }
