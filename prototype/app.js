@@ -108,6 +108,10 @@
   }
 
   addEventListener("keydown", (event) => {
+    // Preserve native keyboard behavior for buttons, links, fields and the open dialog.
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
+    if (event.target?.closest?.("button, a, input, textarea, select, summary, [contenteditable], [role='button'], [role='link'], [role='textbox']")) return;
+    if (app.querySelector("#explain")?.open) return;
     if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(event.key)) {
       event.preventDefault();
       go(1);
@@ -118,6 +122,7 @@
   });
 
   addEventListener("wheel", (event) => {
+    if (app.querySelector("#explain")?.open || event.target?.closest?.("dialog")) return;
     const now = Date.now();
     if (Math.abs(event.deltaY) < 24 || now - lastWheel < 700) return;
     event.preventDefault();
@@ -131,6 +136,10 @@
   }, { passive: true });
 
   addEventListener("touchend", (event) => {
+    if (app.querySelector("#explain")?.open) {
+      touchStart = null;
+      return;
+    }
     if (!touchStart) return;
     const touch = event.changedTouches[0];
     const dx = touch.clientX - touchStart.x;
