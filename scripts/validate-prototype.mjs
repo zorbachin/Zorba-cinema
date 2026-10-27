@@ -64,8 +64,12 @@ for (const [propertyId, manifestRel] of Object.entries(manifestFiles)) {
     pass(propertyId + " scene order matches MEDIA-MANIFEST.json");
   }
 
-  if (!item.scenes.at(-1)?.final) fail(propertyId + " final scene is not marked final");
-  else pass(propertyId + " final scene is the only commercial explanation gate");
+  const finalSceneIndices = item.scenes.flatMap((scene, index) => scene.final ? [index] : []);
+  if (finalSceneIndices.length !== 1 || finalSceneIndices[0] !== item.scenes.length - 1) {
+    fail(propertyId + " must mark exactly the last scene as final");
+  } else {
+    pass(propertyId + " final scene is the only commercial explanation gate");
+  }
 }
 
 const serialized = JSON.stringify(catalog);
