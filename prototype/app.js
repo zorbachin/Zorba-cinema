@@ -40,12 +40,24 @@
   function installMediaFallback() {
     const image = app.querySelector("[data-scene-image]");
     if (!image) return;
+    // Scene URLs use .webp as the preferred encoding, but MEDIA-MANIFEST.json
+    // also accepts JPEG, PNG and AVIF. Try those before declaring a slot pending.
+    const initialSrc = image.getAttribute("src");
+    const base = initialSrc.replace(/\.(webp|jpe?g|png|avif)$/i, "");
+    const variants = [".webp", ".jpg", ".jpeg", ".png", ".avif"];
+    let variantIndex = variants.indexOf(initialSrc.slice(base.length).toLowerCase());
+    if (variantIndex < 0) variantIndex = 0;
     image.addEventListener("error", () => {
+      variantIndex += 1;
+      if (variantIndex < variants.length) {
+        image.src = base + variants[variantIndex];
+        return;
+      }
       const wrapper = image.parentElement;
       if (!wrapper) return;
       image.remove();
       wrapper.insertAdjacentHTML("afterbegin", pendingMedia());
-    }, { once: true });
+    });
   }
 
   function render() {
