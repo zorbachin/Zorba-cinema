@@ -60,7 +60,27 @@
     });
   }
 
+  function captureNavigationFocus() {
+    const active = document.activeElement;
+    if (!active || !app.contains(active)) return null;
+    if (active.classList?.contains("stage")) return { kind: "stage" };
+    if (["prev", "next"].includes(active.dataset?.action)) return { kind: "action", value: active.dataset.action };
+    for (const kind of ["scene", "property"]) {
+      if (active.dataset?.[kind] !== undefined) return { kind, value: active.dataset[kind] };
+    }
+    return null;
+  }
+
+  function restoreNavigationFocus(anchor) {
+    if (!anchor) return;
+    let target = anchor.kind === "stage" ? app.querySelector(".stage") :
+      [...app.querySelectorAll("[data-" + anchor.kind + "]")].find((node) => node.dataset[anchor.kind] === anchor.value);
+    if (!target || target.disabled) target = app.querySelector(".stage");
+    target?.focus({ preventScroll: true });
+  }
+
   function render() {
+    const focusAnchor = captureNavigationFocus();
     const item = property();
     const scene = item.scenes[index];
     const progress = ((index + 1) / item.scenes.length) * 100;
@@ -110,6 +130,7 @@
     app.querySelector('[data-action="explain"]')?.addEventListener("click", () => app.querySelector("#explain")?.showModal());
     app.querySelector('[data-action="close"]')?.addEventListener("click", () => app.querySelector("#explain")?.close());
     updateUrl();
+    restoreNavigationFocus(focusAnchor);
   }
 
   function go(delta) {
