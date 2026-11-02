@@ -42,6 +42,38 @@ function verifyImageDecode(filename) {
   return null;
 }
 
+function verifyImageGeometry(filename, isHero) {
+  // Reject low-resolution storyboard panels and wrongly cropped concept assets.
+  const result = spawnSync("ffprobe", [
+    "-v", "error", "-select_streams", "v:0",
+    "-show_entries", "stream=width,height", "-of", "json", filename
+  ], { encoding: "utf8", timeout: 30000, maxBuffer: 1_000_000 });
+  if (result.error) return "dimension probe unavailable: " + result.error.message;
+  if (result.status !== 0) return "cannot inspect dimensions: " + (result.stderr || `exit ${result.status}`).trim().slice(0, 180);
+  let width, height;
+  try {
+    const stream = JSON.parse(result.stdout).streams?.[0];
+    width = stream?.width;
+    height = stream?.height;
+  } catch {
+    return "invalid dimension probe response";
+  }
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) {
+    return "missing or invalid image dimensions";
+  }
+  if (Math.max(width, height) < 2560) {
+    return `image is ${width}x${height}; concept production master must be at least 2560px on its long edge`;
+  }
+  const ratio = width / height;
+  if (isHero && (width >= height || Math.abs(ratio - 0.8) > 0.03)) {
+    return `hero is ${width}x${height}; required hero-4x5 must be portrait 4:5`;
+  }
+  if (!isHero && ratio < (16 / 9) - 0.02) {
+    return `scene is ${width}x${height}; concept scene master must be landscape 16:9 or wider`;
+  }
+  return null;
+}
+
 for (const relManifest of manifestPaths) {
   const manifestFile = path.join(repoRoot, relManifest);
   const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
@@ -53,6 +85,7 @@ for (const relManifest of manifestPaths) {
   const ambiguous = [];
   const zeroByte = [];
   const undecodable = [];
+  const unsuitable = [];
 
   for (const base of expected) {
     const matches = byBase.get(base) || [];
@@ -64,6 +97,10 @@ for (const relManifest of manifestPaths) {
       else {
         const reason = verifyImageDecode(filename);
         if (reason) undecodable.push({ name: matches[0], reason });
+        else {
+          const geometryIssue = verifyImageGeometry(filename, base === manifest.requiredCrop.basename);
+          if (geometryIssue) unsuitable.push({ name: matches[0], reason: geometryIssue });
+        }
       }
     }
   }
@@ -73,7 +110,7 @@ for (const relManifest of manifestPaths) {
     .flatMap(([, names]) => names)
     .sort();
 
-  const pass = missing.length === 0 && ambiguous.length === 0 && zeroByte.length === 0 && undecodable.length === 0;
+  const pass = missing.length === 0 && ambiguous.length === 0 && zeroByte.length === 0 && undecodable.length === 0 && unsuitable.length === 0;
   if (!pass) failures += 1;
 
   console.log("\n[" + manifest.propertyId + "] " + (pass ? "PASS" : "NOT READY"));
@@ -99,6 +136,11 @@ for (const relManifest of manifestPaths) {
   if (undecodable.length) {
     console.log("unreadable image files (first frame must decode with FFmpeg):");
     for (const item of undecodable) console.log("  - " + item.name + ": " + item.reason);
+  }
+
+  if (unsuitable.length) {
+    console.log("wrong-size or wrong-aspect production images:");
+    for (const item of unsuitable) console.log("  - " + item.name + ": " + item.reason);
   }
 
   if (unexpected.length) {
