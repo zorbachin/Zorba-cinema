@@ -111,7 +111,7 @@
           '<button data-action="next" ' + (index === item.scenes.length - 1 ? 'disabled' : '') + '>NEXT →</button>' +
         '</div>' +
       '</div>' +
-      '<dialog id="explain"><div><p class="kicker">CONCEPT ONLY</p><h2>The property is the interface.</h2><p>Agents provide approved photography, verified property details and branding. A client version turns that material into a guided property microsite with one supplied enquiry or viewing path.</p><p class="dialog-note">No live contact action is wired in this review build.</p><button data-action="close">CLOSE</button></div></dialog>' +
+      '<dialog id="explain"><div><p class="kicker">CONCEPT ONLY</p><h2>The property is the interface.</h2><p>Agents provide approved photography, verified property details and branding. A client version turns that material into a guided property microsite with one supplied enquiry or viewing path.</p><p class="dialog-note">The properties shown here are concepts, not active listings. A client build uses the agent's approved contact or viewing route.</p><a class="contact-action" href="mailto:zgrashin@gmail.com?subject=Cinematic%20Listings%20demo%20inquiry" aria-label="Email Zorba about the Cinematic Listings demo">ASK ABOUT A CLIENT DEMO ↗</a><p class="dialog-note">The demo inquiry goes to Zorba, not a real-estate agent. This opens your email app; the site does not send or store messages. If nothing opens, email <span class="contact-email">zgrashin@gmail.com</span> directly.</p><button data-action="close">CLOSE</button></div></dialog>' +
     '</section>';
 
     installMediaFallback();
