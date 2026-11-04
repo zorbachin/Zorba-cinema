@@ -4,3 +4,16 @@
 dialog .contact-action{display:inline-block;max-width:100%;margin-top:10px;padding:13px 16px;background:var(--accent);color:#111;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:.07em;line-height:1.5;overflow-wrap:anywhere}
 dialog .contact-action:focus-visible{outline:3px solid #fff;outline-offset:4px}
 dialog .contact-email{color:#fff;font-weight:700;overflow-wrap:anywhere}
+
+/* Mobile offerability: 44px tap targets and an independently scrollable scene index.
+   The 10-scene strip must not compress into sub-44px buttons at 390/430px. */
+.property-switch button,.controls button,.concept-cta,dialog button,dialog .contact-action{min-height:44px}
+.controls button{min-width:44px}
+@media(min-width:721px){
+  .scene-nav{max-height:calc(100dvh - 136px);overflow-y:auto;overscroll-behavior:contain;padding:5px 6px}
+  .scene-nav button{width:44px;height:44px;flex:0 0 44px}
+}
+@media(max-width:720px){
+  .scene-nav{top:64px;left:13px;right:13px;bottom:auto;max-width:calc(100vw - 26px);gap:4px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:4px 2px 8px;scroll-snap-type:x proximity}
+  .scene-nav button{width:44px;height:44px;min-width:44px;min-height:44px;flex:0 0 44px;padding:0;scroll-snap-align:start}
+}
