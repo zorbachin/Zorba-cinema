@@ -155,7 +155,7 @@
   });
 
   addEventListener("wheel", (event) => {
-    if (app.querySelector("#explain")?.open || event.target?.closest?.("dialog")) return;
+    if (app.querySelector("#explain")?.open || event.target?.closest?.("dialog, .scene-nav")) return;
     const now = Date.now();
     if (Math.abs(event.deltaY) < 24 || now - lastWheel < 700) return;
     event.preventDefault();
@@ -163,24 +163,37 @@
     go(event.deltaY > 0 ? 1 : -1);
   }, { passive: false });
 
+  // Let visitors drag the scrollable scene index without triggering scene changes.
+  // Buttons, links and dialog controls retain their native touch behavior.
+  function isTouchControl(target) {
+    return !!target?.closest?.(".scene-nav, .property-switch, .controls, .concept-cta, dialog, button, a, input, select, textarea, [contenteditable]");
+  }
+
   addEventListener("touchstart", (event) => {
-    const touch = event.changedTouches[0];
-    touchStart = { x: touch.clientX, y: touch.clientY };
+    if (app.querySelector("#explain")?.open || isTouchControl(event.target)) {
+      touchStart = null;
+      return;
+    }
+    const touch = event.changedTouches?.[0];
+    touchStart = touch ? { x: touch.clientX, y: touch.clientY } : null;
   }, { passive: true });
 
   addEventListener("touchend", (event) => {
-    if (app.querySelector("#explain")?.open) {
+    if (app.querySelector("#explain")?.open || isTouchControl(event.target)) {
       touchStart = null;
       return;
     }
     if (!touchStart) return;
-    const touch = event.changedTouches[0];
+    const touch = event.changedTouches?.[0];
+    if (!touch) { touchStart = null; return; }
     const dx = touch.clientX - touchStart.x;
     const dy = touch.clientY - touchStart.y;
     touchStart = null;
     const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
     if (Math.abs(delta) >= 44) go(delta < 0 ? 1 : -1);
   }, { passive: true });
+
+  addEventListener("touchcancel", () => { touchStart = null; }, { passive: true });
 
   addEventListener("hashchange", () => {
     index = sceneIndexFromHash();
