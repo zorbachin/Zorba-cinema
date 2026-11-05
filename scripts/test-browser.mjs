@@ -13,9 +13,10 @@ const cases = [
 const browser = await chromium.launch({ headless: true });
 let checked = 0;
 
-async function runOne({ id, start, last, other }, mobile) {
+async function runOne({ id, start, last, other }, mobileWidth = null) {
+  const mobile = mobileWidth !== null;
   const context = await browser.newContext({
-    viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+    viewport: mobile ? { width: mobileWidth, height: 844 } : { width: 1280, height: 800 },
     isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1,
   });
   const page = await context.newPage();
@@ -74,7 +75,7 @@ async function runOne({ id, start, last, other }, mobile) {
     }
     assert.deepEqual(errors, [], "no uncaught browser JavaScript errors");
     checked++;
-    console.log("PASS Chromium " + id + " / " + (mobile ? "390px touch" : "1280px desktop") +
+    console.log("PASS Chromium " + id + " / " + (mobile ? mobileWidth + "px touch" : "1280px desktop") +
       ": deep link, 10 scenes, navigation/focus, disclosure, dialog, service CTA, switch" +
       (mobile ? ", tap sizing" : ""));
   } finally {
@@ -84,8 +85,8 @@ async function runOne({ id, start, last, other }, mobile) {
 
 try {
   for (const item of cases) {
-    await runOne(item, false);
-    await runOne(item, true);
+    await runOne(item);
+    for (const width of [390, 430]) await runOne(item, width);
   }
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
