@@ -1,0 +1,55 @@
+name: Cinematic Listings engine QA (not release approval)
+
+on:
+  push:
+    branches:
+      - offerability/cinematic-listings-engine
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prototype-engine:
+    name: Prototype logic and browser regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Existing zero-dependency truth and interaction gates
+        run: |
+          node --check prototype/app.js
+          node --check prototype/data.js
+          node scripts/validate-prototype.mjs
+          node scripts/test-focus-retention.mjs
+          node scripts/test-inquiry-path.mjs
+          node scripts/test-media-fallback.mjs
+          node scripts/test-media-geometry.mjs
+          node scripts/test-mobile-navigation.mjs
+      - name: Install Chromium test runtime
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test both concepts in an actual Chromium browser
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/cinema-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8765/prototype/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/test-browser.mjs
+      - name: Report known production-media hold, without pretending media passed
+        if: always()
+        run: |
+          if [[ -d properties/17-ocean/media && -d properties/columbus-01/media ]]; then
+            node scripts/validate-media.mjs
+          else
+            echo "::notice title=NOT OFFERABLE::22 approved production images remain required (11 per concept)."
+            echo "Media gate NOT RUN: at least one production pack directory is absent."
+            echo "Green engine tests do not authorize public deployment or buyer release."
+          fi
