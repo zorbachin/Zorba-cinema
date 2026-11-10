@@ -28,6 +28,9 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     assert.equal(response?.status(), 200, id + ": document HTTP status");
     await page.locator(".stage").waitFor();
     assert.equal(await page.locator("nav.scene-nav button").count(), 10, id + ": 10 scenes");
+    assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').count(), 1,
+      id + ": exactly one scene is announced as current");
+    assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').getAttribute("data-scene"), "0");
     assert.match(await page.locator(".disclosure").innerText(), /CONCEPT PROPERTY.*Not an active real-estate listing/i);
     assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
     assert.equal(new URL(page.url()).hash, "#" + start);
@@ -37,6 +40,8 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     await next.focus();
     await page.keyboard.press("Enter");
     assert.notEqual(new URL(page.url()).hash, "#" + start, "next button changed scene");
+    assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').getAttribute("data-scene"), "1",
+      id + ": current scene announcement follows keyboard navigation");
     assert.equal(await page.locator('[data-action="next"]').evaluate((el) => document.activeElement === el),
       true, "next button retains focus after scene render");
 
@@ -72,6 +77,8 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     assert.equal(new URL(page.url()).searchParams.get("property"), other, "switch updates query");
     assert.notEqual(new URL(page.url()).hash, "#" + last, "switch returns to first scene");
     assert.equal(await page.locator('[data-property="' + other + '"]').getAttribute("aria-pressed"), "true");
+    assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').getAttribute("data-scene"), "0",
+      id + ": switching properties announces the first scene as current");
 
     if (mobile) {
       const nav = page.locator(".scene-nav");
