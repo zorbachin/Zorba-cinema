@@ -40,6 +40,15 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     assert.equal(await page.locator('[data-action="next"]').evaluate((el) => document.activeElement === el),
       true, "next button retains focus after scene render");
 
+    // Shared links can be mistyped or corrupted. A malformed percent escape
+    // previously crashed scene parsing and left a cold visitor with no page.
+    for (const fragment of ["#%E0%A4%A", "#unknown-scene"]) {
+      await page.goto(root + "/prototype/?property=" + id + fragment, { waitUntil: "domcontentloaded" });
+      await page.locator(".stage").waitFor();
+      assert.equal(new URL(page.url()).hash, "#" + start,
+        id + ": invalid deep link recovers to the first scene");
+    }
+
     // Direct hashed links are independently loadable without authentication.
     await page.goto(root + "/prototype/?property=" + id + "#" + last, { waitUntil: "domcontentloaded" });
     await page.locator('[data-action="explain"]').waitFor();
