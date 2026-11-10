@@ -13,7 +13,15 @@
 
   const property = () => catalog[propertyId];
   const sceneIndexFromHash = () => {
-    const id = decodeURIComponent(location.hash.replace(/^#/, ""));
+    // An external/share URL can carry malformed percent escapes. Never let one
+    // broken fragment prevent the entire concept experience from rendering.
+    let id;
+    try {
+      id = decodeURIComponent(location.hash.replace(/^#/, ""));
+    } catch (error) {
+      if (!(error instanceof URIError)) throw error;
+      return 0;
+    }
     const found = property().scenes.findIndex((scene) => scene.id === id);
     return found >= 0 ? found : 0;
   };
