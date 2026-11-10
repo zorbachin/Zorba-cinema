@@ -111,7 +111,7 @@
           (scene.final ? '<button class="concept-cta" data-action="explain">HOW THE REAL VERSION WORKS</button>' : '') +
         '</article>' +
         '<nav class="scene-nav" aria-label="Scenes">' +
-          item.scenes.map((s, i) => '<button data-scene="' + i + '" class="' + (i === index ? 'active' : '') + '" aria-label="Go to ' + s.kicker + '">' + String(i + 1).padStart(2, "0") + '</button>').join('') +
+          item.scenes.map((s, i) => '<button data-scene="' + i + '" class="' + (i === index ? 'active' : '') + '"' + (i === index ? ' aria-current="step"' : '') + ' aria-label="Go to ' + s.kicker + '">' + String(i + 1).padStart(2, "0") + '</button>').join('') +
         '</nav>' +
         '<div class="controls">' +
           '<button data-action="prev" ' + (index === 0 ? 'disabled' : '') + '>← BACK</button>' +
