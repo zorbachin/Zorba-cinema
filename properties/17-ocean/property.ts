@@ -2,7 +2,7 @@ export const property = {
   id: "17-ocean",
   status: "concept",
   label: "17 OCEAN",
-  location: "Santa Monica, California",
+  location: "California Coast — Concept",
   disclosure: "Concept property created to demonstrate a cinematic listing experience.",
   treatment: "cinematic",
   scenes: [
