@@ -37,6 +37,55 @@ for (const [propertyId, manifestRel] of Object.entries(manifestFiles)) {
     continue;
   }
 
+  // Shared metadata and the browser prototype must tell the same concept-only story.
+  // This guards against reintroducing unsupported city or real-listing implications.
+  const propertySource = fs.readFileSync(path.join(root, "properties", propertyId, "property.ts"), "utf8");
+  for (const field of ["id", "status", "label", "location"]) {
+    const pattern = new RegExp(`^\\s*${field}:\\s*"([^"]+)"\\s*,?\\s*#!/usr/bin/env node
+
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import vm from "node:vm";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, "..");
+const sandbox = { window: {} };
+
+const dataSource = fs.readFileSync(path.join(root, "prototype/data.js"), "utf8");
+vm.runInNewContext(dataSource, sandbox, { filename: "prototype/data.js" });
+const catalog = sandbox.window.CINEMATIC_LISTINGS;
+
+const manifestFiles = {
+  "17-ocean": "properties/17-ocean/MEDIA-MANIFEST.json",
+  "columbus-01": "properties/columbus-01/MEDIA-MANIFEST.json",
+};
+
+let failures = 0;
+function fail(message) {
+  failures += 1;
+  console.error("FAIL: " + message);
+}
+function pass(message) {
+  console.log("PASS: " + message);
+}
+
+for (const [propertyId, manifestRel] of Object.entries(manifestFiles)) {
+  const item = catalog?.[propertyId];
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestRel), "utf8"));
+
+  if (!item) {
+    fail(propertyId + " missing from prototype/data.js");
+    continue;
+  }
+
+, "m");
+    const found = propertySource.match(pattern);
+    if (!found) fail(propertyId + " property.ts must expose literal " + field + " metadata");
+    else if (found[1] !== item[field]) fail(propertyId + " " + field + " metadata drift: property.ts=" + JSON.stringify(found[1]) + " prototype=" + JSON.stringify(item[field]));
+    else pass(propertyId + " " + field + " metadata agrees with prototype");
+  }
   if (item.status !== "concept") fail(propertyId + " status must remain concept");
   else pass(propertyId + " remains explicitly concept");
 
