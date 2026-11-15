@@ -27,6 +27,17 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     const response = await page.goto(entry, { waitUntil: "domcontentloaded" });
     assert.equal(response?.status(), 200, id + ": document HTTP status");
     await page.locator(".stage").waitFor();
+    // A stable, dedicated status announces only the selected scene, not
+    // the entire re-created #app tree on every keyboard/swipe action.
+    const announcement = page.locator("#scene-announcement");
+    assert.equal(await announcement.count(), 1, "one stable live region");
+    assert.equal(await page.locator("#app").getAttribute("aria-live"), null,
+      "whole interactive app must not be an aria-live region");
+    assert.equal(await announcement.getAttribute("role"), "status");
+    assert.equal(await announcement.getAttribute("aria-live"), "polite");
+    assert.equal(await announcement.innerText(), "", "visually hidden status is not visibly rendered");
+    assert.match(await announcement.textContent(), /Scene 1 of 10:/,
+      "initial scene has a concise semantic announcement");
     assert.equal(await page.locator("nav.scene-nav button").count(), 10, id + ": 10 scenes");
     assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').count(), 1,
       id + ": exactly one scene is announced as current");
@@ -40,6 +51,8 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     await next.focus();
     await page.keyboard.press("Enter");
     assert.notEqual(new URL(page.url()).hash, "#" + start, "next button changed scene");
+    assert.match(await announcement.textContent(), /Scene 2 of 10:/,
+      "keyboard navigation updates one concise scene status");
     assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').getAttribute("data-scene"), "1",
       id + ": current scene announcement follows keyboard navigation");
     assert.equal(await page.locator('[data-action="next"]').evaluate((el) => document.activeElement === el),
@@ -77,6 +90,10 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     assert.equal(new URL(page.url()).searchParams.get("property"), other, "switch updates query");
     assert.notEqual(new URL(page.url()).hash, "#" + last, "switch returns to first scene");
     assert.equal(await page.locator('[data-property="' + other + '"]').getAttribute("aria-pressed"), "true");
+    assert.match(await announcement.textContent(), /Scene 1 of 10:/,
+      "property switching resets live status to the first scene");
+    assert.match(await announcement.textContent(), other === "columbus-01" ? /COLUMBUS 01/ : /17 OCEAN/,
+      "live status identifies the newly selected property");
     assert.equal(await page.locator('nav.scene-nav button[aria-current="step"]').getAttribute("data-scene"), "0",
       id + ": switching properties announces the first scene as current");
 
