@@ -35,7 +35,8 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
       "whole interactive app must not be an aria-live region");
     assert.equal(await announcement.getAttribute("role"), "status");
     assert.equal(await announcement.getAttribute("aria-live"), "polite");
-    assert.equal(await announcement.innerText(), "", "visually hidden status is not visibly rendered");
+    assert.deepEqual(await announcement.evaluate((el) => { const s = getComputedStyle(el); return [s.width, s.height, s.overflow]; }),
+      ["1px", "1px", "hidden"], "status is visually hidden but remains accessible");
     assert.match(await announcement.textContent(), /Scene 1 of 10:/,
       "initial scene has a concise semantic announcement");
     assert.equal(await page.locator("nav.scene-nav button").count(), 10, id + ": 10 scenes");
