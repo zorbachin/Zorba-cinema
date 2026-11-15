@@ -17,3 +17,6 @@ dialog .contact-email{color:#fff;font-weight:700;overflow-wrap:anywhere}
   .scene-nav{top:64px;left:13px;right:13px;bottom:auto;max-width:calc(100vw - 26px);gap:4px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:4px 2px 8px;scroll-snap-type:x proximity}
   .scene-nav button{width:44px;height:44px;min-width:44px;min-height:44px;flex:0 0 44px;padding:0;scroll-snap-align:start}
 }
+
+/* Stable, concise status for screen readers; avoid announcing entire scene DOM on each render. */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
