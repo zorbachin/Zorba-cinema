@@ -87,6 +87,16 @@
     target?.focus({ preventScroll: true });
   }
 
+  function announceScene(item, scene) {
+    // Keep the live region outside #app: replacing the scene DOM must not
+    // cause a screen reader to announce the entire page on every navigation.
+    const status = document.getElementById("scene-announcement");
+    if (!status) return;
+    const message = item.label + ". Scene " + (index + 1) + " of " +
+      item.scenes.length + ": " + scene.kicker + ". " + scene.title;
+    if (status.textContent !== message) status.textContent = message;
+  }
+
   function render() {
     const focusAnchor = captureNavigationFocus();
     const item = property();
@@ -139,6 +149,7 @@
     app.querySelector('[data-action="close"]')?.addEventListener("click", () => app.querySelector("#explain")?.close());
     updateUrl();
     restoreNavigationFocus(focusAnchor);
+    announceScene(item, scene);
   }
 
   function go(delta) {
