@@ -24,6 +24,7 @@ jobs:
           node --check prototype/app.js
           node --check prototype/data.js
           node scripts/validate-prototype.mjs
+          node --test scripts/test-media-source-path.mjs
           node scripts/test-focus-retention.mjs
           node scripts/test-inquiry-path.mjs
           node scripts/test-media-fallback.mjs
