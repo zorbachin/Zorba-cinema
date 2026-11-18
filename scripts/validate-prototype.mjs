@@ -62,16 +62,23 @@ for (const [propertyId, manifestRel] of Object.entries(manifestFiles)) {
     pass(propertyId + " exposes all " + item.scenes.length + " canonical scenes");
   }
 
+  // The media basename alone is insufficient: an external URL or a sibling
+  // property's path with the same filename would pass the old check, allowing
+  // tracking requests or broken renders despite a green source-truth gate.
+  // Keep the known local .webp route; app.js may fall back to other approved
+  // encodings *within this directory* after an image load error.
   item.scenes.forEach((scene, index) => {
-    const expected = manifest.requiredFrames[index];
-    const actual = scene.image ? path.basename(scene.image, path.extname(scene.image)) : null;
-    if (actual !== expected) {
-      fail(propertyId + " scene " + (index + 1) + " expected media basename " + expected + " but got " + String(actual));
+    const base = manifest.requiredFrames[index];
+    const expected = "../properties/" + propertyId + "/media/" + base + ".webp";
+    if (scene.image !== expected) {
+      fail(propertyId + " scene " + (index + 1) + " must use canonical local media path " +
+        JSON.stringify(expected) + ", not " + JSON.stringify(scene.image));
     }
   });
 
-  if (item.scenes.every((scene, index) => path.basename(scene.image || "", path.extname(scene.image || "")) === manifest.requiredFrames[index])) {
-    pass(propertyId + " scene order matches MEDIA-MANIFEST.json");
+  if (item.scenes.every((scene, index) =>
+    scene.image === "../properties/" + propertyId + "/media/" + manifest.requiredFrames[index] + ".webp")) {
+    pass(propertyId + " scene order and local media paths match MEDIA-MANIFEST.json");
   }
 
   const finalSceneIndices = item.scenes.flatMap((scene, index) => scene.final ? [index] : []);
