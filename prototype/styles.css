@@ -20,3 +20,15 @@ dialog .contact-email{color:#fff;font-weight:700;overflow-wrap:anywhere}
 
 /* Stable, concise status for screen readers; avoid announcing entire scene DOM on each render. */
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+
+/* Persistent buyer route: works on first scene even while approved imagery is pending. */
+.topbar-tools{display:flex;align-items:center;gap:16px}
+.overview-action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 12px;border:1px solid var(--line);background:rgba(8,9,10,.62);color:var(--ink);cursor:pointer;font-size:9px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
+.overview-action:hover{border-color:var(--accent)}
+.overview-action .label-short{display:none}
+@media(max-width:720px){
+  .topbar-tools{gap:7px}
+  .overview-action{padding:0 9px;font-size:8px}
+  .overview-action .label-full{display:none}
+  .overview-action .label-short{display:inline}
+}
