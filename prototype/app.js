@@ -106,8 +106,11 @@
     app.innerHTML = '<section class="shell ' + item.treatment + (reduced.matches ? ' reduced' : '') + '">' +
       '<header class="topbar">' +
         '<div class="brand">CINEMATIC LISTINGS <small>REVIEW BUILD</small></div>' +
-        '<div class="property-switch">' +
-          ids.map((id) => '<button data-property="' + id + '" aria-pressed="' + (id === propertyId) + '">' + catalog[id].label + '</button>').join('') +
+        '<div class="topbar-tools">' +
+          '<div class="property-switch">' +
+            ids.map((id) => '<button data-property="' + id + '" aria-pressed="' + (id === propertyId) + '">' + catalog[id].label + '</button>').join('') +
+          '</div>' +
+          '<button class="overview-action" data-action="overview" aria-label="About these concept properties and contact Zorba"><span class="label-full">ABOUT / CONTACT</span><span class="label-short" aria-hidden="true">INFO</span></button>' +
         '</div>' +
       '</header>' +
       '<div class="stage" tabindex="0">' +
@@ -145,6 +148,9 @@
     }));
     app.querySelector('[data-action="prev"]')?.addEventListener("click", () => go(-1));
     app.querySelector('[data-action="next"]')?.addEventListener("click", () => go(1));
+    // A cold visitor can reach the truthful concept explanation and enquiry
+    // from any scene, without navigating ten frames or relying on loaded media.
+    app.querySelector('[data-action="overview"]')?.addEventListener("click", () => app.querySelector("#explain")?.showModal());
     app.querySelector('[data-action="explain"]')?.addEventListener("click", () => app.querySelector("#explain")?.showModal());
     app.querySelector('[data-action="close"]')?.addEventListener("click", () => app.querySelector("#explain")?.close());
     updateUrl();
