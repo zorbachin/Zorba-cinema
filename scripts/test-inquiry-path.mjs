@@ -39,7 +39,11 @@ for (const [propertyId, finalHash] of [
   };
   vm.runInNewContext(data, sandbox, { filename: "prototype/data.js" });
   vm.runInNewContext(script, sandbox, { filename: "prototype/app.js" });
-  assert.doesNotMatch(markup, /data-action="explain"/, "before final scene no explanation CTA");
+  assert.doesNotMatch(markup, /data-action="explain"/, "before final scene no final-scene CTA");
+  assert.match(markup, /data-action="overview" aria-label="About these concept properties and contact Zorba"/,
+    "from first scene an accessible concept / service-contact route is available");
+  assert.match(script, /querySelector\('\[data-action="overview"\]'\).*addEventListener\("click"/,
+    "first-scene route opens the existing dialog, not a duplicate enquiry flow");
   location.hash = finalHash;
   listeners.get("hashchange")();
   assert.match(markup, /data-action="explain"/, "final scene provides explanation CTA");
