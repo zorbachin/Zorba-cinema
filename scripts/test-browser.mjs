@@ -47,6 +47,27 @@ async function runOne({ id, start, last, other }, mobileWidth = null) {
     assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex,nofollow");
     assert.equal(new URL(page.url()).hash, "#" + start);
 
+    // A visitor arriving at ANY scene can understand the demo and reach an
+    // honest service-only enquiry without first completing all ten scenes.
+    const overview = page.locator('[data-action="overview"]');
+    assert.equal(await overview.count(), 1, "one persistent concept information route");
+    assert.match(await overview.getAttribute("aria-label"), /concept properties and contact Zorba/i);
+    const overviewBox = await overview.boundingBox();
+    assert.ok(overviewBox && overviewBox.width >= 44 && overviewBox.height >= 44,
+      "information / contact control has a 44px minimum touch target");
+    assert.ok(overviewBox.x >= 0 && overviewBox.x + overviewBox.width <= (mobile ? mobileWidth : 1280),
+      "information / contact control fits the visible viewport");
+    await overview.click();
+    assert.equal(await page.locator("#explain").evaluate((el) => el.open), true,
+      "information and enquiry dialog opens from first scene");
+    assert.equal(await page.locator("#explain a.contact-action").getAttribute("href"),
+      "mailto:zgrashin@gmail.com?subject=Cinematic%20Listings%20demo%20inquiry");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#explain").evaluate((el) => el.open), false,
+      "native Escape dismisses information dialog");
+    assert.equal(new URL(page.url()).hash, "#" + start,
+      "opening information never changes the selected scene");
+
     // Actual button-driven navigation in Chromium, preserving focus after DOM replacement.
     const next = page.locator('[data-action="next"]');
     await next.focus();
